@@ -1,0 +1,8 @@
+#define var1 3 
+#define uniform var1
+.hello {
+	background-color: "red";
+	background-color: uniform;
+}
+
+/*this is a comment*/

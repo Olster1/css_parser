@@ -1,0 +1,131 @@
+* {
+	margin: 0;
+	padding: 0;
+	line-height: 2em;
+	text-decoration: none;
+}
+.indie-flower-font {
+  	font-family: 'Indie Flower', cursive;
+  	font-size: 1em;
+  	line-height: 2.0em;
+  	color: black;
+}
+
+.lato-font {
+	font-family: 'Lato', sans-serif;
+	font-size: 1em;
+  	line-height: 2.0em;
+  	color: black;
+}
+#signup-form {
+	/*background-image: url("clouds.png");*/
+}
+
+.large-font-size {
+	font-size: 2em;
+}
+
+#background-image {
+  	min-width: 1024px;	  
+
+	width: 100%;
+	max-width: 100%;
+	height: auto;
+	position: absolute;
+	overflow: hidden;
+
+	z-index: -2;
+
+}
+
+a {
+	color: black;
+}
+
+.carousel-btn {
+	font-color: white; 
+	font-size: 22pt;
+	position: absolute;
+	right: 5%;
+
+}
+
+.nav-link {
+	padding: 1%;
+	display: inline;
+	
+	transition: color 0.5s ease;
+	color: white;
+	
+}
+
+.nav-link:hover {
+	color: purple;
+}
+
+#nav-bar {
+	font-size: 14pt;
+	font-family: 'Raleway', sans-serif;
+	z-index: 1; 
+	position: relative; 
+	padding-top: 3%; 
+	width: 100%;
+	left: 60%;
+
+}
+.drop-down-menu {
+	position: absolute; 
+	top: 3.0em; 
+	left: 2em;
+	overflow: hidden;
+	background-color: white; 
+	display: none;
+	color: black;
+}
+
+.nav-link-drop-down {
+	padding: 0;
+	color: black;
+}
+
+#book-carousel {
+	position: relative; 
+	height: 50vw; 
+	width: 100%; 
+	
+	padding-top: 5%;
+	color: white;
+	font-size: 2vw;
+	font-family: 'Raleway', sans-serif;
+	overflow: !important hidden; 
+}
+
+@media screen and (max-width: 1024px) { 
+	.nav-link {
+		padding: 0;
+		display: block;
+		background-color: white;
+		color: black;
+		transition: background-color 0.5s ease;
+	}
+	.nav-link:hover {
+		background-color: #ffcc00;
+	}
+	#nav-bar {
+		padding-top: 5em;
+		text-align: center;
+		left: auto;
+	}
+	.drop-down-menu {
+		font-size: 12pt;
+	}
+
+	#book-carousel {
+		padding-top: 2em;
+	}
+
+}
+
+@media screen and (max-width: 720px) { 
+	
+}
