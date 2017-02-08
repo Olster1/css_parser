@@ -1,8 +1,17 @@
-#define var1 3 
-#define uniform var1
+@define var1 #333442
+@define uniform var1
+@define var2 33px
+@define var3 20%
+@define var4 var3
+
 .hello {
-	background-color: "red";
+	background-color: "blue";
 	background-color: uniform;
+	background-color: var2;
+	background-color: var3;
+	background-color: var4;
 }
+
+@define heyThere
 
 /*this is a comment*/

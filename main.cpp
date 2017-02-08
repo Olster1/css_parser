@@ -104,10 +104,13 @@ enum TokenType {
 	TOKEN_NEWLINE,
 	TOKEN_CLOSE_PARENTHESIS,
 	TOKEN_FORWARD_SLASH,
+	TOKEN_AT_SYMBOL,
 	TOKEN_ASTRIX,
 	TOKEN_COMMENT,
 	TOKEN_HASH,
 	TOKEN_PERIOD,
+	TOKEN_VALUE_WITH_UNIT,
+	TOKEN_HASH_NUMBER
 };
 
 struct Token {
@@ -200,9 +203,18 @@ Token getToken(char *at, int *lineNumber, bool wantsToEatSpaces = true) {
 			token = initToken(TOKEN_CLOSE_PARENTHESIS, at, 1);
 			at++;
 		} break;
+		case '@': {
+			token = initToken(TOKEN_AT_SYMBOL, at, 1);
+			at++;
+		} break;
 		case '#': {
 			token = initToken(TOKEN_HASH, at, 1);
 			at++;
+			while(*at && (isNumeric(*at) || isAlphaNumeric(*at))) {
+				token.type = TOKEN_HASH_NUMBER;
+				at++;
+			}
+			token.size = (at - token.at);
 		} break;
 		case '\'': 
 		case '\"': {
@@ -244,6 +256,7 @@ Token getToken(char *at, int *lineNumber, bool wantsToEatSpaces = true) {
 			token.at = at;
 			if(isAlphaNumeric(*at)) {
 				token = initToken(TOKEN_WORD, at, 1);
+
 				while(*at && (isAlphaNumeric(*at) || isNumeric(*at) || innerAlphaNumericCharacter(*at))) {
 					at++;
 				}
@@ -253,8 +266,9 @@ Token getToken(char *at, int *lineNumber, bool wantsToEatSpaces = true) {
 
 			} else if(isNumeric(*at)) {
 				token = initToken(TOKEN_INTEGER, at, 1);
-				bool numberOfDecimal = 0;
-				while(*at && (isNumeric(*at) || *at == '.')) {
+				int numberOfDecimal = 0;
+				bool hasUnit = false;
+				while(*at && (isNumeric(*at) || *at == '.' || isAlphaNumeric(*at) || *at == '%' )) {
 					if(*at == '.') {
 						numberOfDecimal++;
 						if(numberOfDecimal > 1) {
@@ -262,9 +276,16 @@ Token getToken(char *at, int *lineNumber, bool wantsToEatSpaces = true) {
 							break;
 						}
 					}
+					else if(isAlphaNumeric(*at) || *at == '%') {
+						hasUnit = true;
+					} else if(hasUnit){
+						printErrorToConsole("you have a number mixed with unit letters in your define statement", *lineNumber);
+						break;
+					}
 					at++;
 				}
 				if(numberOfDecimal > 0) token.type = TOKEN_FLOAT;
+				if(hasUnit > 0) token.type = TOKEN_VALUE_WITH_UNIT;
 				token.size = at - token.at;
 			}
 			
@@ -302,8 +323,9 @@ void advancePtrWithToken(char **ptr, Token token) {
 }
 
 int main(int argCount, char *args[]) {
-	if(argCount > 1) {
+	if(argCount > 2) {
 		char *fileName = args[1];
+		char *destFileName = args[2];
 		FileContent content = readContentsOfFileWithNullTerminator(fileName);
 		if(content.size != 0) {
 			
@@ -348,8 +370,16 @@ int main(int argCount, char *args[]) {
 					case TOKEN_STRING: {
 
 					} break;
+					case TOKEN_VALUE_WITH_UNIT: {
+
+					} break;
+					case TOKEN_FLOAT: {
+
+					} break;
 					case TOKEN_NEWLINE: {
 						lineNumber++;
+					} break;
+					case TOKEN_HASH_NUMBER: {
 					} break;
 					case TOKEN_CLOSE_PARENTHESIS: {
 
@@ -365,6 +395,8 @@ int main(int argCount, char *args[]) {
 					case TOKEN_INTEGER: {
 					} break;
 					case TOKEN_HASH: {
+					} break;
+					case TOKEN_AT_SYMBOL: {
 						Token nextToken = getToken(src, &lineNumber, false);
 						if(nextToken.type == TOKEN_WORD && matchString(nextToken.at, "define")) {
 							copySrc = false;
@@ -373,7 +405,7 @@ int main(int argCount, char *args[]) {
 							if(wordToken.type == TOKEN_WORD) {
 								advancePtrWithToken(&src, wordToken);
 								Token valueToken = getToken(src, &lineNumber);
-								if(valueToken.type == TOKEN_INTEGER || valueToken.type == TOKEN_WORD || valueToken.type == TOKEN_STRING || valueToken.type == TOKEN_BOOl) {
+								if(valueToken.type == TOKEN_INTEGER || valueToken.type == TOKEN_WORD || valueToken.type == TOKEN_STRING || valueToken.type == TOKEN_BOOl || valueToken.type == TOKEN_VALUE_WITH_UNIT || valueToken.type == TOKEN_FLOAT || valueToken.type == TOKEN_HASH_NUMBER) {
 									advancePtrWithToken(&src, valueToken);
 									if(varArrayCount < arrayLength(varArray)) {
 										Variable *refVar = getVariable(valueToken.at, valueToken.size, varArray, varArrayCount);
@@ -389,8 +421,9 @@ int main(int argCount, char *args[]) {
 										printErrorToConsole("variable array full", lineNumber);	
 										parsing = false;		
 									}
-								} else if(wordToken.type != TOKEN_NEWLINE && wordToken.type != TOKEN_NULL_TERMINATOR) {
-									printErrorToConsole("expected a value or a variable", lineNumber);	
+								} else if(valueToken.type != TOKEN_NEWLINE && valueToken.type != TOKEN_NULL_TERMINATOR) {
+									printErrorToConsole("recieved a value type which is not supported...", lineNumber);	
+									printf("type recieved was a %d\n", valueToken.type);
 									parsing = false;
 								}
 							} else if(wordToken.type != TOKEN_NEWLINE && wordToken.type != TOKEN_NULL_TERMINATOR) {
@@ -400,7 +433,6 @@ int main(int argCount, char *args[]) {
 						}
 					} break;
 					case TOKEN_WORD: {
-						printf("%s\n", copyString(token.at, token.size));
 						Variable *refVar = getVariable(token.at, token.size, varArray, varArrayCount);
 						if(refVar) {
 
@@ -426,15 +458,20 @@ int main(int argCount, char *args[]) {
 					while(lastSrc < src) {
 						*destAt++ = *lastSrc++;
 					}	
+				} else {
+					src = eatWhiteSpace(src);
 				}
 				lastSrc = src;
 			}
+			printf("Variables found: %d\n", varArrayCount);
 			forl(varArrayCount) {
 				printf("variable[%d]:\nname:%s\nvalue:%s\n", i, varArray[i].name, varArray[i].value);
 			}
 			int bytesToWrite = (int)(destAt - destBuffer);
-			writeFile("style.css", destBuffer, bytesToWrite - 1);
+			writeFile(destFileName, destBuffer, bytesToWrite - 1);
 		}
+	} else {
+		printf("ERROR: You need to pass the src filename and the dest filename respecitvely\n");
 	}
 
 	return 0;

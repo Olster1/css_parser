@@ -1,8 +1,9 @@
- 
-
 .hello {
-	background-color: "red";
-	background-color: 3;
+	background-color: "blue";
+	background-color: #333442;
+	background-color: 33px;
+	background-color: 20%;
+	background-color: 20%;
 }
 
 /*this is a comment*/
